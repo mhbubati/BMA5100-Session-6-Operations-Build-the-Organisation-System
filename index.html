@@ -1,0 +1,733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<meta name="description" content="Organisation Systems Challenge - Interactive Learning Game - Bath Spa University London"/>
+<title>🏭 Organisation Systems Challenge | Bath Spa University London</title>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;600;700;800;900&display=swap" rel="stylesheet">
+<style>
+/* ===== GLOBAL STYLES - HIGH CONTRAST & ACCESSIBLE ===== */
+*{margin:0;padding:0;box-sizing:border-box;font-family:'Montserrat',sans-serif}
+:root{
+  --bg:#0f172a;
+  --card-bg:#1e293b;
+  --text:#f8fafc;
+  --primary:#38bdf8;
+  --primary-dark:#0ea5e9;
+  --success:#22c55e;
+  --error:#dc2626;
+  --warning:#fbbf24;
+  --border:#334155;
+  --glow:0 0 20px rgba(56,189,248,0.4);
+  --shadow:0 10px 40px rgba(0,0,0,0.5);
+}
+
+body{
+  background:linear-gradient(135deg,#0f172a 0%,#1e293b 50%,#0f172a 100%);
+  color:var(--text);
+  line-height:1.7;
+  overflow-x:hidden;
+  min-height:100vh;
+  position:relative;
+  padding:0;
+}
+
+/* ===== ANIMATED BACKGROUND - SPARKS & PARTICLES ===== */
+.bg-animation{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;overflow:hidden;pointer-events:none}
+.bg-animation .spark{position:absolute;width:4px;height:4px;background:rgba(56,189,248,0.6);border-radius:50%;animation:sparkle 4s infinite ease-in-out}
+.bg-animation .spark:nth-child(1){top:10%;left:10%;animation-delay:0s}
+.bg-animation .spark:nth-child(2){top:20%;left:80%;animation-delay:1.5s}
+.bg-animation .spark:nth-child(3){top:50%;left:30%;animation-delay:3s}
+.bg-animation .spark:nth-child(4){top:70%;left:70%;animation-delay:2s}
+.bg-animation .spark:nth-child(5){top:85%;left:20%;animation-delay:4s}
+@keyframes sparkle{0%,100%{transform:scale(0);opacity:0}50%{transform:scale(1);opacity:1}}
+
+/* Particle Canvas */
+#particle-canvas{position:fixed;top:0;left:0;width:100%;height:100%;z-index:-1;pointer-events:none}
+#confetti-canvas{position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:1000}
+
+.skip-link{position:absolute;top:-40px;left:0;background:var(--primary);color:#fff;padding:10px 20px;z-index:100;transition:top .3s;font-weight:700;border:2px solid #fff}
+.skip-link:focus{top:0;outline:3px solid var(--warning);outline-offset:2px}
+
+/* ===== MAIN CONTAINER ===== */
+.container{max-width:1100px;margin:0 auto;padding:40px 25px;position:relative;z-index:1}
+
+/* ===== HEADER CARD ===== */
+.header-card{
+  background:rgba(30,41,59,0.98);
+  backdrop-filter:blur(20px);
+  border-radius:25px;
+  padding:35px;
+  box-shadow:var(--shadow);
+  margin-bottom:30px;
+  border:2px solid rgba(56,189,248,0.3);
+  animation:slideIn 0.8s ease-out;
+  text-align:center;
+}
+@keyframes slideIn{from{opacity:0;transform:translateY(30px)}to{opacity:1;transform:translateY(0)}}
+
+.header-card h1{
+  font-size:2.8rem;
+  font-weight:900;
+  background:linear-gradient(135deg,var(--primary) 0%,#7dd3fc 100%);
+  -webkit-background-clip:text;
+  -webkit-text-fill-color:transparent;
+  background-clip:text;
+  margin-bottom:10px;
+  text-shadow:var(--glow);
+}
+.university-name{
+  font-size:1.2rem;
+  color:#94a3b8;
+  font-weight:600;
+  margin-top:10px;
+  padding-top:15px;
+  border-top:2px solid var(--border);
+}
+
+/* ===== INSTRUCTIONS BOX ===== */
+.instructions-box{
+  background:linear-gradient(135deg,#1e293b 0%,#334155 100%);
+  padding:30px;
+  border-left:6px solid var(--primary);
+  margin-bottom:30px;
+  border-radius:15px;
+  box-shadow:0 4px 15px rgba(56,189,248,0.15);
+  font-size:1.35rem;
+  line-height:1.9;
+  text-align:left;
+}
+.instructions-box strong{color:var(--primary);font-weight:800}
+.instructions-box ul{margin:15px 0 15px 30px}
+.instructions-box li{margin-bottom:10px}
+
+/* ===== PROGRESS BAR ===== */
+.progress-container{background:rgba(30,41,59,0.8);backdrop-filter:blur(10px);padding:20px;margin:30px 0;border-radius:15px;border:2px solid var(--border);box-shadow:var(--glow)}
+.progress-label{font-size:1.2rem;font-weight:700;margin-bottom:10px;display:flex;justify-content:space-between}
+.progress{width:100%;height:25px;background:#334155;border-radius:15px;overflow:hidden;box-shadow:inset 0 2px 5px rgba(0,0,0,0.5)}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--primary) 0%,#7dd3fc 100%);border-radius:15px;transition:width 0.6s cubic-bezier(0.4,0,0.2,1);box-shadow:0 0 15px var(--primary)}
+
+/* ===== GAME AREA ===== */
+.game-area{display:flex;flex-wrap:wrap;gap:20px;justify-content:center;margin:30px 0}
+
+/* ===== CATEGORY BOXES - GLASSMORPHISM ===== */
+.category-box{
+  background:rgba(30,41,59,0.98);
+  backdrop-filter:blur(20px);
+  border-radius:20px;
+  padding:25px;
+  min-width:200px;
+  min-height:150px;
+  border:3px solid var(--border);
+  transition:all .3s ease;
+  cursor:pointer;
+  text-align:center;
+  box-shadow:var(--shadow);
+}
+.category-box:hover{
+  border-color:var(--primary);
+  box-shadow:var(--glow);
+  transform:translateY(-3px);
+}
+.category-box[data-type="input"]{border-color:#38bdf8}
+.category-box[data-type="process"]{border-color:#22c55e}
+.category-box[data-type="output"]{border-color:#fbbf24}
+.category-box[data-type="byproduct"]{border-color:#f472b6}
+.category-title{font-size:1.5rem;font-weight:800;margin-bottom:15px;color:var(--primary)}
+.category-icon{font-size:2.5rem;margin-bottom:10px}
+
+/* ===== ITEMS - DRAGGABLE/SORTABLE ===== */
+.items-container{
+  display:flex;
+  flex-wrap:wrap;
+  gap:15px;
+  justify-content:center;
+  margin:30px 0;
+  min-height:100px;
+}
+.item{
+  background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);
+  border:3px solid var(--border);
+  border-radius:15px;
+  padding:15px 20px;
+  cursor:pointer;
+  transition:all .3s ease;
+  font-size:1.15rem;
+  font-weight:700;
+  min-width:150px;
+  text-align:center;
+  box-shadow:0 4px 15px rgba(0,0,0,0.3);
+}
+.item:hover{
+  transform:translateY(-3px);
+  border-color:var(--primary);
+  box-shadow:var(--glow);
+}
+.item.selected{
+  border-color:var(--warning);
+  box-shadow:0 0 0 3px var(--warning), 0 10px 30px rgba(251,191,36,0.4);
+  transform:translateY(-5px);
+}
+.item.correct{
+  background:linear-gradient(135deg,var(--success) 0%,#16a34a 100%)!important;
+  border-color:var(--success)!important;
+  color:#fff!important;
+  animation:correctPop 0.5s ease;
+}
+.item.wrong{
+  background:linear-gradient(135deg,var(--error) 0%,#dc2626 100%)!important;
+  border-color:var(--error)!important;
+  color:#fff!important;
+  animation:shake 0.5s ease;
+}
+@keyframes correctPop{0%{transform:scale(1)}50%{transform:scale(1.03)}100%{transform:scale(1)}}
+@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-8px)}80%{transform:translateX(8px)}}
+
+/* ===== SCORE & CONTROLS ===== */
+.score-display{
+  font-size:1.5rem;
+  font-weight:800;
+  text-align:center;
+  margin:25px 0;
+  padding:15px;
+  background:rgba(30,41,59,0.8);
+  border-radius:15px;
+  border:2px solid var(--border);
+}
+.next-btn{
+  background:linear-gradient(135deg,var(--primary) 0%,#7dd3fc 100%);
+  color:#fff;border:none;padding:18px 40px;font-size:1.25rem;font-weight:800;
+  border-radius:30px;cursor:pointer;transition:all .3s ease;
+  box-shadow:0 6px 20px rgba(56,189,248,0.4);
+  width:100%;
+  max-width:300px;
+  margin:20px auto;
+  display:block;
+}
+.next-btn:hover{transform:translateY(-3px);box-shadow:0 10px 30px rgba(56,189,248,0.6)}
+.next-btn:active{transform:translateY(-1px)}
+.next-btn:focus-visible{outline:3px solid var(--warning);outline-offset:3px}
+.next-btn:disabled{background:#334155;cursor:not-allowed;transform:none;box-shadow:none;opacity:0.5}
+
+/* ===== CERTIFICATE ===== */
+#certificate{
+  display:none;
+  background:linear-gradient(135deg,#1e293b 0%,#334155 100%);
+  border-radius:25px;
+  padding:40px;
+  margin-top:30px;
+  text-align:center;
+  border:3px solid var(--warning);
+  box-shadow:0 0 50px rgba(251,191,36,0.3);
+  animation:slideIn 0.8s ease-out;
+}
+#certificate h2{font-size:2.5rem;font-weight:900;color:var(--warning);margin-bottom:20px}
+#certificate p{font-size:1.35rem;line-height:1.9;margin:15px 0}
+.certificate-badge{
+  font-size:4rem;
+  margin:20px 0;
+  display:block;
+  animation:badgeBounce 1s infinite;
+}
+@keyframes badgeBounce{0%,100%{transform:translateY(0)}50%{transform:translateY(-10px)}}
+
+/* ===== ACHIEVEMENT BADGES ===== */
+.achievement-badges{display:flex;justify-content:center;gap:20px;flex-wrap:wrap;margin:30px 0}
+.achievement-badge{
+  background:linear-gradient(135deg,#fbbf24 0%,#f59e0b 100%);
+  color:#0f172a;
+  padding:20px 30px;
+  border-radius:25px;
+  font-weight:800;
+  font-size:1.2rem;
+  box-shadow:0 4px 15px rgba(245,158,11,0.4);
+  border:2px solid #f59e0b;
+  animation:badgePop 0.5s ease-out;
+  animation-fill-mode:both;
+}
+.achievement-badge:nth-child(1){animation-delay:0.1s}
+.achievement-badge:nth-child(2){animation-delay:0.2s}
+.achievement-badge:nth-child(3){animation-delay:0.3s}
+@keyframes badgePop{0%{transform:scale(0);opacity:0}100%{transform:scale(1);opacity:1}}
+
+/* ===== CONFETTI CANVAS ===== */
+#confetti-canvas{position:fixed;top:0;left:0;width:100vw;height:100vh;pointer-events:none;z-index:1000}
+
+/* ===== RESPONSIVE ===== */
+@media(max-width:768px){
+  .container{padding:25px 15px}
+  .header-card h1{font-size:2.2rem}
+  .university-name{font-size:1rem}
+  .instructions-box{font-size:1.2rem;padding:20px}
+  .category-box{min-width:150px;padding:20px}
+  .category-title{font-size:1.3rem}
+  .category-icon{font-size:2rem}
+  .item{font-size:1.05rem;padding:12px 15px;min-width:120px}
+  .next-btn{padding:16px 30px;font-size:1.15rem}
+  #certificate{padding:25px}
+  #certificate h2{font-size:2rem}
+  .certificate-badge{font-size:3rem}
+  .achievement-badges{flex-direction:column}
+}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+  <a href="#game-area" class="skip-link">⬇️ Skip to challenge</a>
+  
+  <!-- Animated Background -->
+  <div class="bg-animation">
+    <div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div><div class="spark"></div>
+  </div>
+  <canvas id="particle-canvas"></canvas>
+  <canvas id="confetti-canvas"></canvas>
+  
+  <div class="container">
+    <!-- Header Card -->
+    <div class="header-card">
+      <h1>🏭 Organisation Systems Challenge</h1>
+      <p style="font-size:1.35rem;color:#94a3b8;font-weight:600;margin-top:10px">Interactive Learning Activity</p>
+      <div class="university-name">🏫 Bath Spa University - London - Hackney Campus</div>
+    </div>
+    
+    <!-- Instructions Box -->
+    <div class="instructions-box">
+      <p><strong>👨‍💼 Your Role:</strong> Innovation Analyst</p>
+      
+      <p><strong>🎯 Mission:</strong> Complete <strong>2 rounds</strong> to master systems thinking!</p>
+      <ul>
+        <li>✅ <strong>Round 1:</strong> University system</li>
+        <li>✅ <strong>Round 2:</strong> Hospital system</li>
+      </ul>
+      
+      <p><strong>📘 Key Concepts:</strong></p>
+      <ul>
+        <li>📥 <strong>Inputs</strong> = what goes INTO the system</li>
+        <li>⚙ <strong>Processes</strong> = activities/actions that transform inputs</li>
+        <li>📤 <strong>Outputs</strong> = main intended results</li>
+        <li>♻ <strong>By-products</strong> = unintended results (not the goal)</li>
+      </ul>
+      
+      <p><strong>🎮 How to Play:</strong></p>
+      <ul>
+        <li>👉 <strong>Tap an item</strong> from the list below</li>
+        <li>👉 <strong>Tap a category box</strong> to place it</li>
+        <li>✅ First attempt correct: <strong>+10 points</strong></li>
+        <li>❌ First attempt wrong: <strong>-5 points</strong> + hint</li>
+        <li>🔁 Retry allowed (no extra points)</li>
+      </ul>
+    </div>
+    
+    <!-- Progress Bar -->
+    <div class="progress-container">
+      <div class="progress-label">
+        <span>Challenge Progress</span>
+        <span id="progress-text">Round 1 of 2</span>
+      </div>
+      <div class="progress"><div class="progress-fill" id="progressBar"></div></div>
+    </div>
+    
+    <!-- Round Title -->
+    <h2 id="roundTitle" style="text-align:center;font-size:2rem;color:var(--primary);margin:20px 0">Round 1: University</h2>
+    
+    <!-- Category Boxes -->
+    <div class="game-area">
+      <div class="category-box" data-type="input" role="button" tabindex="0" aria-label="Input category: things that enter the system">
+        <div class="category-icon">📥</div>
+        <div class="category-title">Inputs</div>
+        <div style="font-size:0.95rem;color:#94a3b8">What enters the system</div>
+      </div>
+      <div class="category-box" data-type="process" role="button" tabindex="0" aria-label="Process category: actions that transform inputs">
+        <div class="category-icon">⚙</div>
+        <div class="category-title">Processes</div>
+        <div style="font-size:0.95rem;color:#94a3b8">Actions that transform</div>
+      </div>
+      <div class="category-box" data-type="output" role="button" tabindex="0" aria-label="Output category: intended results">
+        <div class="category-icon">📤</div>
+        <div class="category-title">Outputs</div>
+        <div style="font-size:0.95rem;color:#94a3b8">Main intended results</div>
+      </div>
+      <div class="category-box" data-type="byproduct" role="button" tabindex="0" aria-label="By-product category: unintended results">
+        <div class="category-icon">♻</div>
+        <div class="category-title">By-products</div>
+        <div style="font-size:0.95rem;color:#94a3b8">Unintended results</div>
+      </div>
+    </div>
+    
+    <!-- Items Container -->
+    <div id="items" class="items-container" role="list" aria-label="Items to categorize"></div>
+    
+    <!-- Score Display -->
+    <div class="score-display">Score: <span id="score">0</span></div>
+    
+    <!-- Next Button -->
+    <button id="nextBtn" class="next-btn" onclick="nextRound()">➡️ Next Round</button>
+    
+    <!-- Certificate (hidden initially) -->
+    <div id="certificate">
+      <span class="certificate-badge">🎓</span>
+      <h2>Certificate of Achievement</h2>
+      <p>You've mastered organisation systems thinking!</p>
+      
+      <div class="achievement-badges">
+        <div class="achievement-badge">🧠 Systems Thinker</div>
+        <div class="achievement-badge">🔍 Innovation Analyst</div>
+        <div class="achievement-badge">☕ Coffee Earned</div>
+      </div>
+      
+      <p style="font-size:1.45rem;margin:25px 0">
+        <strong>Final Score:</strong> <span id="finalScore" style="font-size:2.5rem;color:var(--success)"></span>
+      </p>
+      
+      <p style="font-size:1.2rem;margin-top:20px">
+        🌟 <strong>Key Insight:</strong><br>
+        Understanding inputs, processes, outputs, and by-products helps you analyse any organisation systematically.
+      </p>
+    </div>
+  </div>
+
+  <script>
+    // ===== GAME DATA =====
+    let score = 0;
+    let currentRound = 1;
+    let selectedItem = null;
+    let attempted = new Set();
+    let audioCtx = null;
+    
+    const round1 = [
+      {text:"Students", type:"input"},
+      {text:"Teachers", type:"input"},
+      {text:"Lectures", type:"process"},
+      {text:"Research", type:"process"},
+      {text:"Graduates", type:"output"},
+      {text:"Academic papers", type:"output"},
+      {text:"Waste paper", type:"byproduct"}
+    ];
+    
+    const round2 = [
+      {text:"Doctors", type:"input"},
+      {text:"Patients", type:"input"},
+      {text:"Medical operations", type:"process"},
+      {text:"Radiotherapy", type:"process"},
+      {text:"Healthy patients", type:"output"},
+      {text:"Clinical waste", type:"byproduct"}
+    ];
+    
+    // ===== AUDIO SYSTEM =====
+    function initAudio() {
+      try { audioCtx = new (window.AudioContext || window.webkitAudioContext)(); }
+      catch(e) { console.debug('Web Audio not supported'); }
+    }
+    function playSound(type) {
+      if (!audioCtx) return;
+      if (audioCtx.state === 'suspended') audioCtx.resume();
+      const oscillator = audioCtx.createOscillator(), gainNode = audioCtx.createGain();
+      oscillator.connect(gainNode); gainNode.connect(audioCtx.destination);
+      
+      if (type === 'correct') {
+        [523.25, 659.25, 783.99].forEach((freq, i) => {
+          const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.2, audioCtx.currentTime + i*0.08);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i*0.08 + 0.2);
+          osc.start(audioCtx.currentTime + i*0.08); osc.stop(audioCtx.currentTime + i*0.08 + 0.2);
+        });
+      } else if (type === 'wrong') {
+        oscillator.frequency.setValueAtTime(200, audioCtx.currentTime);
+        oscillator.frequency.setValueAtTime(150, audioCtx.currentTime + 0.15);
+        gainNode.gain.setValueAtTime(0.2, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.3);
+        oscillator.start(audioCtx.currentTime); oscillator.stop(audioCtx.currentTime + 0.3);
+      } else if (type === 'win') {
+        [523.25, 659.25, 783.99, 1046.50, 1318.51].forEach((freq, i) => {
+          const osc = audioCtx.createOscillator(), gain = audioCtx.createGain();
+          osc.connect(gain); gain.connect(audioCtx.destination);
+          osc.frequency.value = freq;
+          gain.gain.setValueAtTime(0.25, audioCtx.currentTime + i*0.12);
+          gain.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + i*0.12 + 0.4);
+          osc.start(audioCtx.currentTime + i*0.12); osc.stop(audioCtx.currentTime + i*0.12 + 0.4);
+        });
+      } else if (type === 'click') {
+        oscillator.frequency.setValueAtTime(600, audioCtx.currentTime);
+        gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        gainNode.gain.exponentialRampToValueAtTime(0.01, audioCtx.currentTime + 0.1);
+        oscillator.start(audioCtx.currentTime); oscillator.stop(audioCtx.currentTime + 0.1);
+      }
+    }
+    
+    // ===== PARTICLES =====
+    function initParticles() {
+      const canvas = document.getElementById('particle-canvas'); if (!canvas) return;
+      const ctx = canvas.getContext('2d'); canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+      const particles = [], particleCount = 50;
+      class Particle {
+        constructor() { this.x = Math.random() * canvas.width; this.y = Math.random() * canvas.height; this.size = Math.random() * 2 + 1; this.speedX = Math.random() * 0.5 - 0.25; this.speedY = Math.random() * 0.5 - 0.25; this.color = `rgba(56, 189, 248, ${Math.random() * 0.3 + 0.1})`; }
+        update() { this.x += this.speedX; this.y += this.speedY; if (this.x > canvas.width) this.x = 0; if (this.x < 0) this.x = canvas.width; if (this.y > canvas.height) this.y = 0; if (this.y < 0) this.y = canvas.height; }
+        draw() { ctx.fillStyle = this.color; ctx.beginPath(); ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2); ctx.fill(); }
+      }
+      function init() { for (let i = 0; i < particleCount; i++) particles.push(new Particle()); }
+      function animate() { ctx.clearRect(0, 0, canvas.width, canvas.height); particles.forEach(p => { p.update(); p.draw(); }); requestAnimationFrame(animate); }
+      init(); animate();
+      window.addEventListener('resize', () => { canvas.width = window.innerWidth; canvas.height = window.innerHeight; });
+    }
+    
+    // ===== CONFETTI =====
+    const confettiCanvas = document.getElementById('confetti-canvas');
+    const ctx = confettiCanvas.getContext('2d');
+    let confettiActive = false, confettiPieces = [], animationFrameId = null;
+    function createConfettiPiece() {
+      const colors = ["#38bdf8", "#7dd3fc", "#22c55e", "#fbbf24", "#f472b6", "#a855f7"];
+      const shapes = ['rect', 'circle', 'triangle', 'star', 'diamond'];
+      return { x: Math.random() * confettiCanvas.width, y: Math.random() * -50 - 20, size: Math.random() * 10 + 5, angle: Math.random() * Math.PI * 2, speed: Math.random() * 3 + 2, rotation: (Math.random() - 0.5) * 0.1, color: colors[Math.floor(Math.random() * colors.length)], shape: shapes[Math.floor(Math.random() * shapes.length)], opacity: Math.random() * 0.4 + 0.6, wind: (Math.random() - 0.5) * 1, wobble: Math.random() * Math.PI * 2 };
+    }
+    function drawConfetti() {
+      if (!confettiActive || !ctx) return;
+      ctx.fillStyle = 'rgba(15, 23, 42, 0.1)'; ctx.fillRect(0, 0, confettiCanvas.width, confettiCanvas.height);
+      confettiPieces = confettiPieces.filter(piece => {
+        piece.y += piece.speed; piece.x += piece.wind + Math.sin(piece.wobble) * 2; piece.angle += piece.rotation; piece.wobble += 0.05;
+        if (piece.y > confettiCanvas.height + 50) return false;
+        ctx.save(); ctx.translate(piece.x, piece.y); ctx.rotate(piece.angle); ctx.globalAlpha = piece.opacity; ctx.fillStyle = piece.color;
+        if (piece.shape === 'rect') ctx.fillRect(-piece.size/2, -piece.size/2, piece.size, piece.size * 1.5);
+        else if (piece.shape === 'circle') { ctx.beginPath(); ctx.arc(0, 0, piece.size/2, 0, Math.PI * 2); ctx.fill(); }
+        else if (piece.shape === 'triangle') { ctx.beginPath(); ctx.moveTo(0, -piece.size/2); ctx.lineTo(-piece.size/2, piece.size/2); ctx.lineTo(piece.size/2, piece.size/2); ctx.closePath(); ctx.fill(); }
+        else if (piece.shape === 'star') { for (let i = 0; i < 5; i++) { ctx.lineTo(Math.cos((18 + i * 72) * Math.PI / 180) * piece.size/2, -Math.sin((18 + i * 72) * Math.PI / 180) * piece.size/2); ctx.lineTo(Math.cos((54 + i * 72) * Math.PI / 180) * piece.size/4, -Math.sin((54 + i * 72) * Math.PI / 180) * piece.size/4); } ctx.closePath(); ctx.fill(); }
+        else if (piece.shape === 'diamond') { ctx.beginPath(); ctx.moveTo(0, -piece.size/2); ctx.lineTo(piece.size/2, 0); ctx.lineTo(0, piece.size/2); ctx.lineTo(-piece.size/2, 0); ctx.closePath(); ctx.fill(); }
+        ctx.restore(); return true;
+      });
+      if (confettiPieces.length < 200 && Math.random() > 0.7) confettiPieces.push(createConfettiPiece());
+      animationFrameId = requestAnimationFrame(drawConfetti);
+    }
+    function startConfetti(duration = 5000) { if (confettiActive) return; confettiActive = true; confettiPieces = []; for (let i = 0; i < 150; i++) confettiPieces.push(createConfettiPiece()); drawConfetti(); if (duration > 0) setTimeout(stopConfetti, duration); }
+    function stopConfetti() { confettiActive = false; if (animationFrameId) { cancelAnimationFrame(animationFrameId); animationFrameId = null; } if (ctx && confettiCanvas) ctx.clearRect(0, 0, confettiCanvas.width, confettiCanvas.height); confettiPieces = []; }
+    
+    // ===== LOAD ROUND =====
+    function loadRound(data) {
+      const container = document.getElementById("items");
+      container.innerHTML = "";
+      attempted.clear();
+      
+      data.forEach((obj, i) => {
+        let div = document.createElement("div");
+        div.className = "item";
+        div.innerText = obj.text;
+        div.dataset.type = obj.type;
+        div.id = "item" + i;
+        div.setAttribute('role', 'listitem');
+        div.setAttribute('tabindex', '0');
+        div.setAttribute('aria-label', `${obj.text} - tap to select`);
+        
+        div.onclick = () => selectItem(div);
+        div.onkeydown = (e) => {
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault();
+            selectItem(div);
+          }
+        };
+        
+        container.appendChild(div);
+      });
+      
+      // Update progress bar
+      const percent = currentRound === 1 ? 50 : 100;
+      document.getElementById('progressBar').style.width = percent + '%';
+      document.getElementById('progress-text').innerText = `Round ${currentRound} of 2`;
+    }
+    
+    // ===== SELECT ITEM =====
+    function selectItem(el) {
+      document.querySelectorAll(".item").forEach(i => i.classList.remove("selected"));
+      selectedItem = el;
+      el.classList.add("selected");
+      playSound('click');
+    }
+    
+    // ===== PLACE ITEM =====
+    document.querySelectorAll(".category-box").forEach(box => {
+      box.addEventListener("click", () => {
+        if (!selectedItem) {
+          showFeedback('👆 First, tap an item to select it', 'info');
+          return;
+        }
+        
+        let correct = selectedItem.dataset.type === box.dataset.type;
+        let id = selectedItem.id;
+        
+        // Move item to category box visually (append to box)
+        box.appendChild(selectedItem);
+        
+        // FIRST ATTEMPT CHECK
+        if (!attempted.has(id)) {
+          if (correct) {
+            score += 10;
+            selectedItem.classList.add("correct");
+            showFeedback('✅ Correct! +10 points', 'success');
+            playSound('correct');
+          } else {
+            score -= 5;
+            selectedItem.classList.add("wrong");
+            showFeedback('❌ Not quite. ' + getHint(selectedItem.dataset.type), 'error');
+            playSound('wrong');
+          }
+          attempted.add(id);
+        } else {
+          // RETRY (NO SCORE CHANGE)
+          if (correct) {
+            selectedItem.classList.remove("wrong");
+            selectedItem.classList.add("correct");
+            showFeedback('✅ Correct on retry!', 'success');
+            playSound('correct');
+          } else {
+            showFeedback('❌ Still not right. ' + getHint(selectedItem.dataset.type), 'error');
+            playSound('wrong');
+          }
+        }
+        
+        selectedItem.classList.remove("selected");
+        selectedItem = null;
+        
+        updateScore();
+        checkEnd();
+      });
+      
+      // Keyboard support for category boxes
+      box.onkeydown = (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          box.click();
+        }
+      };
+    });
+    
+    // ===== GET HINT =====
+    function getHint(type) {
+      const hints = {
+        input: "💡 Input = something that enters the system",
+        process: "💡 Process = an action that transforms input",
+        output: "💡 Output = intended result",
+        byproduct: "💡 By-product = unintended result"
+      };
+      return hints[type] || "";
+    }
+    
+    // ===== SHOW FEEDBACK =====
+    function showFeedback(message, type) {
+      // Create temporary feedback element
+      const feedback = document.createElement('div');
+      feedback.className = `feedback ${type} show`;
+      feedback.style.cssText = `
+        position:fixed;
+        top:20px;
+        left:50%;
+        transform:translateX(-50%);
+        padding:15px 25px;
+        border-radius:15px;
+        font-size:1.1rem;
+        font-weight:700;
+        z-index:1000;
+        animation:fadeIn 0.4s ease;
+        background:${type === 'success' ? 'rgba(34,197,94,0.2)' : type === 'error' ? 'rgba(220,38,38,0.2)' : 'rgba(56,189,248,0.2)'};
+        border:3px solid ${type === 'success' ? 'var(--success)' : type === 'error' ? 'var(--error)' : 'var(--primary)'};
+        color:${type === 'success' ? '#86efac' : type === 'error' ? '#fca5a5' : '#7dd3fc'};
+      `;
+      feedback.innerText = message;
+      document.body.appendChild(feedback);
+      
+      setTimeout(() => {
+        feedback.style.opacity = '0';
+        feedback.style.transition = 'opacity 0.3s ease';
+        setTimeout(() => feedback.remove(), 300);
+      }, 2500);
+    }
+    
+    // ===== UPDATE SCORE =====
+    function updateScore() {
+      document.getElementById('score').innerText = score;
+    }
+    
+    // ===== NEXT ROUND =====
+    function nextRound() {
+      playSound('click');
+      
+      if (currentRound === 1) {
+        // Clear category boxes for round 2
+        document.querySelectorAll(".category-box").forEach(b => {
+          // Keep the title/icon, remove only placed items
+          const title = b.querySelector('.category-title');
+          const icon = b.querySelector('.category-icon');
+          const desc = b.querySelector('div[style*="font-size:0.95rem"]');
+          b.innerHTML = '';
+          if (icon) b.appendChild(icon);
+          if (title) b.appendChild(title);
+          if (desc) b.appendChild(desc);
+        });
+        
+        // Clear items container
+        document.getElementById("items").innerHTML = "";
+        
+        currentRound = 2;
+        document.getElementById("roundTitle").innerText = "Round 2: Hospital";
+        document.getElementById("nextBtn").innerText = "🎉 Finish Challenge";
+        
+        loadRound(round2);
+        
+      } else {
+        finishGame();
+      }
+    }
+    
+    // ===== FINISH GAME =====
+    function finishGame() {
+      // Hide game elements
+      document.getElementById("roundTitle").style.display = 'none';
+      document.querySelector(".game-area").style.display = 'none';
+      document.getElementById("items").style.display = 'none';
+      document.querySelector(".score-display").style.display = 'none';
+      document.getElementById("nextBtn").style.display = 'none';
+      document.querySelector(".progress-container").style.display = 'none';
+      
+      // Show certificate
+      const cert = document.getElementById("certificate");
+      cert.style.display = "block";
+      
+      // Set final score
+      document.getElementById("finalScore").innerText = score;
+      
+      // Determine level
+      let level = score > 90 ? "🏆 Gold" : score > 70 ? "🥈 Silver" : "🥉 Bronze";
+      cert.innerHTML += `<p style="margin-top:15px;font-size:1.3rem"><strong>Level:</strong> ${level}</p>`;
+      
+      // Celebrate
+      playSound('win');
+      startConfetti();
+      
+      // Scroll to certificate
+      cert.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+    
+    // ===== CHECK END =====
+    function checkEnd() {
+      let remaining = document.querySelectorAll("#items .item");
+      if (remaining.length === 0 && currentRound === 2) {
+        // Auto-finish if all items placed in round 2
+        setTimeout(finishGame, 1000);
+      }
+    }
+    
+    // ===== INIT =====
+    document.addEventListener('DOMContentLoaded', () => {
+      initAudio();
+      initParticles();
+      loadRound(round1);
+      
+      window.addEventListener('resize', () => {
+        if (confettiCanvas.classList.contains('active')) {
+          confettiCanvas.width = window.innerWidth;
+          confettiCanvas.height = window.innerHeight;
+        }
+      });
+    });
+  </script>
+</body>
+</html>
